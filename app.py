@@ -55,3 +55,22 @@ criterion = nn.BCELoss()
 writer_fake = SummaryWriter(f"runs/GAN_MIST/fake")
 writer_real = SummaryWriter(f"runs/GAN_MIST/real")
 step = 0
+
+for epoch in range(num_epochs):
+    for batch_idx, (real, _) in enumerate(loader):
+        real = real.view(-1, 784).to(device)
+        batch_size = real.shape[0]
+
+        ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))
+        noise = torch.randn(batch_size, z_dim).to(device)
+        fake = gen(noise)
+        disc_real = disc(real).view(-1)
+        lossD_real = criterion(disc_real, torch.ones_like(disc_real))
+        disc_fake = disc(fake).view(-1)
+        lossD_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
+        lossD = (lossD_real + lossD_fake) / 2
+        disc.zero_grad()
+        lossD.backward(retain_graph=True)
+        opt_disc.step()
+
+        
