@@ -79,3 +79,20 @@ for epoch in range(num_epochs):
         gen.zero_grad()
         lossG.backward()
         opt_gen.step()
+        
+        ### Printing losses occasionally and printing to tensorboard
+        if batch_idx == 0:
+            print(
+                f"Epoch [{epoch}/{num_epochs}] Batch {batch_idx}/{len(loader)} \
+                  Loss D: {lossD:.4f}, loss G: {lossG:.4f}"
+            )
+
+            with torch.no_grad():
+                fake = gen(fixed_noise).reshape(-1, 1, 28, 28)
+                data = real.reshape(-1, 1, 28, 28)
+                img_grid_fake = torchvision.utils.make_grid(fake, normalize=True)
+                img_grid_real = torchvision.utils.make_grid(data, normalize=True)
+
+                writer_fake.add_image("Mnist Fake Images", img_grid_fake, global_step=step)
+                writer_real.add_image("Mnist Real Images", img_grid_real, global_step=step)
+                step += 1
