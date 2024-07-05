@@ -66,11 +66,16 @@ for epoch in range(num_epochs):
         fake = gen(noise)
         disc_real = disc(real).view(-1)
         lossD_real = criterion(disc_real, torch.ones_like(disc_real))
-        disc_fake = disc(fake).view(-1)
+        disc_fake = disc(fake).view(-1) # disc_fake = disc(fake.detach()).view(-1) wont backpropagate to generator (another way)
         lossD_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
         lossD = (lossD_real + lossD_fake) / 2
         disc.zero_grad()
-        lossD.backward(retain_graph=True)
+        lossD.backward(retain_graph=True) # for not backpropagating to generator
         opt_disc.step()
 
-        
+        ### Train Generator: min log(1 - D(G(z))) <-> max log(D(G(z))
+        output = disc(fake).view(-1)
+        lossG = criterion(output, torch.ones_like(output))
+        gen.zero_grad()
+        lossG.backward()
+        opt_gen.step()
