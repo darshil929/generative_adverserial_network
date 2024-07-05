@@ -32,3 +32,26 @@ class Generator(nn.Module):
         
     def forward(self, x):
         return self.gen(x)
+    
+# Hyperparameters etc.
+device = "cuda" if torch.cuda.is_available() else "cpu"
+lr = 3e-4
+z_dim = 64 # 128, 256, etc.
+image_dim = 28*28*1 # 784
+batch_size = 32
+num_epochs = 50
+
+disc = Discriminator(image_dim).to(device)
+gen = Generator(z_dim, image_dim).to(device)
+fixed_noise = torch.randn((batch_size, z_dim)).to(device)
+transforms = transforms.Compose(
+    [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+)
+dataset = datasets.MNIST(root="dataset/", transform=transforms, download=True)
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+opt_disc = optim.Adam(disc.parameters(), lr=lr)
+opt_gen = optim.Adam(gen.parameters(), lr=lr)
+criterion = nn.BCELoss()
+writer_fake = SummaryWriter(f"runs/GAN_MIST/fake")
+writer_real = SummaryWriter(f"runs/GAN_MIST/real")
+step = 0
